@@ -1,0 +1,10 @@
+{
+  "display_name": "Multi Chat Lore Proxy",
+  "loading_order": 200,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "author": "OpenAI Codex",
+  "version": "0.1.0",
+  "homePage": "https://github.com/N0VI028/JS-Slash-Runner"
+}
