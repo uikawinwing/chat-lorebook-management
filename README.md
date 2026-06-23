@@ -1,36 +1,80 @@
-# Multi Chat Lore Proxy
+# Chat Lore Sources
 
-这个扩展的目标不是让 SillyTavern 原生支持“多个 chat lorebook 绑定”，而是做一层兼容代理：
+这个扩展让**当前聊天**可以记录多本来源世界书，并在生成期间临时把它们加入 SillyTavern 的全局世界书选择。
 
-- 聊天实际上只绑定 1 本锚点 lorebook。
-- 其他脚本创建或绑定的 chat lorebook 会被登记成“源书”。
-- 扩展把所有源书条目镜像进锚点书里，所以最终同一聊天里可以同时生效。
+它不再做 proxy lorebook，也不再接管 TavernHelper。
 
-## 兼容思路
+## 工作方式
 
-- `getChatWorldbookName('current')`
-  - 返回“脚本视角”的当前源书名，而不是内部锚点书名。
-  - 这样脚本做 `if (!getChatWorldbookName('current')) fallback/give up` 时，不会因为只看到代理锚点而误判。
-- `getOrCreateChatWorldbook('current')`
-  - 若已有脚本视角源书，返回该源书。
-  - 若当前没有源书，则自动创建一个普通源书并接入代理，再返回这个源书名。
-- `getOrCreateChatWorldbook('current', 'BookA')`
-  - 把 `BookA` 登记为源书，并返回 `BookA`。
-- `rebindChatWorldbook('current', 'BookB')`
-  - 不再替换旧 chat lorebook，而是把 `BookB` 追加成源书，并把脚本视角当前源书切换到 `BookB`。
-- 旧接口 `getChatLorebook` / `setChatLorebook` / `getOrCreateChatLorebook`
-  - 也会一起代理。
+当前聊天保存：
 
-## 防覆盖机制
+```js
+chat_metadata.multi_chat_lore_sources = {
+  version: 1,
+  sources: ['Book A', 'Book B', 'Book C'],
+  updatedAt: 1782150000000,
+};
+```
 
-- 扩展会持续检查 `TavernHelper` 的聊天世界书接口是否被后加载脚本覆盖。
-- 如果检测到覆盖，会自动重新挂接代理函数。
-- 扩展也会轮询 `chat_metadata.world_info`：
-  - 如果脚本绕过 TavernHelper 直接把聊天世界书改成 `BookX`，扩展会把 `BookX` 自动接入源书列表。
-  - 然后重新把实际聊天绑定恢复为代理锚点书。
+生成时：
 
-## 当前限制
+```text
+GENERATION_AFTER_COMMANDS
+  临时 selected_world_info += Book A / Book B / Book C
 
-- SillyTavern UI 里看到的 chat lorebook 仍然会是锚点书，而不是多个名字。
-- 如果有脚本直接写入 `chat_metadata.world_info` 后立刻在同一个同步 tick 内读取，可能会短暂读到它刚写入的值；绑定守卫通常会在约 1.2 秒内接管并修正。
-- 从 ST 原生 UI 直接删除源书时，不一定能立刻收到删除事件；下一次聊天切换、世界书同步或删除接口调用时会自动清理失效源书。
+SillyTavern 原生 getWorldInfoPrompt()
+  正常扫描这些世界书
+
+GENERATE_AFTER_COMBINE_PROMPTS / GENERATION_STOPPED / GENERATION_ENDED / CHAT_CHANGED
+  恢复 selected_world_info 原值
+```
+
+因此 ST 原生世界书规则仍然生效，包括关键词、插入顺序、位置、概率、递归、sticky、cooldown、delay、group 和角色过滤等。
+
+如果当前聊天已经绑定原生 chat lorebook，它仍由 `chat_metadata.world_info` 管理。面板会显示这本书，并从可添加来源里排除；生成时也不会把它重复注入到 `selected_world_info`。
+
+## 不做什么
+
+- 不创建 `__mclp__` 代理世界书
+- 不创建每个聊天自己的锚点书
+- 不创建共享 scratch 世界书
+- 不修改 `chat_metadata.world_info`
+- 不在搜索或添加时自动创建缺失的世界书；只有用户点击“新建空书”才会创建
+- 不 patch TavernHelper
+- 不持久化临时 `selected_world_info`
+
+## 使用方式
+
+在扩展菜单打开“多聊天世界书来源”，用搜索栏为当前聊天添加已有世界书。
+
+如果确实需要一本新的空世界书，可以输入名称后点击“新建空书”。这会调用 SillyTavern 原生 `createNewWorldInfo()` 创建空书，并自动加入当前聊天来源列表。
+
+也可以从控制台或其他脚本调用：
+
+```js
+await ChatLoreSources.add('Book A');
+await ChatLoreSources.add('Book B');
+await ChatLoreSources.create('New Empty Book');
+
+ChatLoreSources.list();
+
+await ChatLoreSources.remove('Book A');
+await ChatLoreSources.clear();
+```
+
+## 给 TavernHelper 脚本的用法
+
+TavernHelper 可以作为薄入口调用这个扩展，但不要把核心逻辑写在 TavernHelper 里：
+
+```js
+await window.ChatLoreSources.add('Book A');
+```
+
+扩展本身负责保存聊天 metadata、生成期间临时注入、以及恢复 ST 状态。
+
+## 限制
+
+- “添加已有”要求来源书已经存在；输入不存在的名字会被拒绝。
+- “新建空书”是显式操作，会创建全局世界书文件，然后加入当前聊天来源列表。
+- 扩展只在生成窗口里临时修改 `selected_world_info`，不会改变用户原本勾选的全局世界书设置。
+- 如果 SillyTavern 未来调整生成事件顺序，需要重新验证 `GENERATION_AFTER_COMMANDS` 仍然早于 `getWorldInfoPrompt()`。
