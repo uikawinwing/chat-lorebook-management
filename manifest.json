@@ -1,10 +1,10 @@
 {
-  "display_name": "Chat Lore Sources",
+  "name": "chat-lorebook-management",
+  "display_name": "聊天世界书管理",
   "loading_order": 200,
   "requires": [],
   "optional": [],
   "js": "index.js",
-  "author": "OpenAI Codex",
-  "version": "0.2.0",
-  "homePage": "https://github.com/N0VI028/JS-Slash-Runner"
+  "author": "uikawinwing",
+  "version": "1.0.0"
 }

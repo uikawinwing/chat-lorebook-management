@@ -20,7 +20,7 @@ import {
   setSourceState,
 } from './core.mjs';
 
-const EXTENSION_NAME = 'Chat Lore Sources';
+const EXTENSION_NAME = '聊天世界书管理';
 const MENU_BUTTON_ID = 'chat_lore_sources_button';
 const MENU_BADGE_ID = 'chat_lore_sources_badge';
 const STYLE_ID = 'chat_lore_sources_styles';
@@ -637,9 +637,9 @@ function createPanel() {
     root.html(`
       <section class="cls-hero">
         <div class="cls-header">
-          <div class="cls-title cls-main-title">多聊天世界书来源</div>
+          <div class="cls-title cls-main-title">聊天世界书管理</div>
           <div class="cls-muted">
-            管理当前聊天的世界书扫描入口。原生 chat lorebook 只展示不接管；额外来源只在生成期间临时加入，扫描后立即恢复。
+            管理当前聊天的世界书扫描入口。原生 chat lorebook 由 ST 管理；额外来源只在生成期间临时加入，扫描后立即恢复。
           </div>
         </div>
         <div class="cls-summary">
@@ -788,8 +788,8 @@ function ensureMenuButton(reason = 'unknown') {
   const button = $(`
     <div id="${MENU_BUTTON_ID}" class="list-group-item">
       <div style="display:flex; align-items:center; gap:8px; width:100%;">
-        <div class="fa-solid fa-book-open extensionsMenuExtensionButton" title="多聊天世界书来源"></div>
-        <span style="flex:1 1 auto; min-width:0;">多聊天世界书来源</span>
+        <div class="fa-solid fa-book-open extensionsMenuExtensionButton" title="聊天世界书管理"></div>
+        <span style="flex:1 1 auto; min-width:0;">聊天世界书管理</span>
         <span id="${MENU_BADGE_ID}">0</span>
       </div>
     </div>
@@ -904,7 +904,7 @@ function bootstrap() {
   ensureMenuButton('bootstrap');
   ensureMenuWatcher('bootstrap');
   refreshMenuButton();
-  log('已加载；不会创建代理世界书，也不会修改原生聊天世界书绑定。');
+  log('已加载；来源世界书只在生成期间临时加入，扫描后恢复原本选择。');
 }
 
 eventSource.on(event_types.APP_READY, bootstrap);
