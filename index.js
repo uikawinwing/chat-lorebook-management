@@ -389,7 +389,7 @@ function ensureStyles() {
     .cls-panel {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       width: min(760px, calc(100vw - 72px));
       max-width: 100%;
       margin: 0 auto;
@@ -398,26 +398,25 @@ function ensureStyles() {
     }
     .cls-section {
       border-top: 1px solid var(--SmartThemeBorderColor);
-      padding-top: 14px;
+      padding-top: 16px;
     }
     .cls-hero {
-      border: 1px solid var(--SmartThemeBorderColor);
-      border-radius: 8px;
-      padding: 14px;
-      background: color-mix(in srgb, var(--SmartThemeBodyColor) 5%, transparent);
+      padding: 2px 0 0;
     }
     .cls-header {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .cls-title {
       font-weight: 700;
       font-size: 1rem;
+      line-height: 1.25;
     }
     .cls-main-title {
-      font-size: 1.12rem;
-      line-height: 1.3;
+      font-size: 1.18rem;
     }
     .cls-muted {
       opacity: 0.75;
@@ -425,24 +424,25 @@ function ensureStyles() {
       line-height: 1.45;
     }
     .cls-summary {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
     }
     .cls-summary-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
       border: 1px solid var(--SmartThemeBorderColor);
-      border-radius: 8px;
-      padding: 9px 10px;
+      border-radius: 999px;
+      padding: 4px 10px;
       background: color-mix(in srgb, var(--SmartThemeBlurTintColor) 68%, transparent);
     }
     .cls-summary-value {
-      font-size: 1.35rem;
+      font-size: 0.98rem;
       font-weight: 700;
       line-height: 1;
     }
     .cls-summary-label {
-      margin-top: 4px;
       opacity: 0.72;
       font-size: 0.86em;
     }
@@ -488,6 +488,11 @@ function ensureStyles() {
     .cls-panel .cls-danger-button {
       opacity: 0.85;
       border-color: color-mix(in srgb, #ff6b6b 55%, var(--SmartThemeBorderColor));
+    }
+    .cls-panel .cls-primary-button {
+      border-color: color-mix(in srgb, var(--SmartThemeQuoteColor) 62%, var(--SmartThemeBorderColor));
+      background: color-mix(in srgb, var(--SmartThemeQuoteColor) 24%, var(--SmartThemeBlurTintColor));
+      font-weight: 700;
     }
     .cls-list {
       display: flex;
@@ -540,11 +545,11 @@ function ensureStyles() {
       margin-top: 8px;
     }
     .cls-empty {
-      opacity: 0.72;
-      font-style: italic;
+      opacity: 0.78;
       border: 1px dashed var(--SmartThemeBorderColor);
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--SmartThemeBodyColor) 3%, transparent);
     }
     .cls-form-group {
       display: flex;
@@ -556,19 +561,18 @@ function ensureStyles() {
       font-size: 0.92em;
     }
     .cls-add-card {
-      border: 1px solid var(--SmartThemeBorderColor);
-      border-radius: 8px;
-      padding: 12px;
-      background: color-mix(in srgb, var(--SmartThemeBodyColor) 4%, transparent);
-    }
-    .cls-help {
-      margin-top: 8px;
+      padding: 0;
     }
     @media (max-width: 720px) {
       .cls-panel {
         width: min(100%, calc(100vw - 32px));
       }
-      .cls-summary,
+      .cls-header {
+        align-items: stretch;
+      }
+      .cls-summary {
+        width: 100%;
+      }
       .cls-field-row {
         grid-template-columns: 1fr;
       }
@@ -593,7 +597,7 @@ function ensureStyles() {
 
 function renderScanList(nativeNames, sources) {
   if (!nativeNames.length && !sources.length) {
-    return '<div class="cls-empty">当前聊天没有原生 chat lorebook，也没有额外来源书。生成时不会临时加入世界书。</div>';
+    return '<div class="cls-empty">当前聊天还没有世界书参与扫描。</div>';
   }
 
   return `
@@ -601,10 +605,9 @@ function renderScanList(nativeNames, sources) {
       ${nativeNames.map((name) => `
         <div class="cls-item">
           <div class="cls-item-main">
-            <span class="cls-pill cls-pill-native">原生</span>
+            <span class="cls-pill cls-pill-native">聊天绑定</span>
             <span class="cls-item-name">${escapeHtml(name)}</span>
           </div>
-          <span class="cls-muted">ST 管理</span>
         </div>
       `).join('')}
       ${sources.map((name) => `
@@ -638,22 +641,19 @@ function createPanel() {
       <section class="cls-hero">
         <div class="cls-header">
           <div class="cls-title cls-main-title">聊天世界书管理</div>
-          <div class="cls-muted">
-            管理当前聊天的世界书扫描入口。原生 chat lorebook 由 ST 管理；额外来源只在生成期间临时加入，扫描后立即恢复。
-          </div>
-        </div>
-        <div class="cls-summary">
-          <div class="cls-summary-item">
-            <div class="cls-summary-value">${scanCount}</div>
-            <div class="cls-summary-label">扫描入口</div>
-          </div>
-          <div class="cls-summary-item">
-            <div class="cls-summary-value">${nativeNames.length}</div>
-            <div class="cls-summary-label">原生 chat lorebook</div>
-          </div>
-          <div class="cls-summary-item">
-            <div class="cls-summary-value">${sources.length}</div>
-            <div class="cls-summary-label">额外来源书</div>
+          <div class="cls-summary" aria-label="当前聊天世界书数量">
+            <div class="cls-summary-item">
+              <div class="cls-summary-value">${scanCount}</div>
+              <div class="cls-summary-label">全部</div>
+            </div>
+            <div class="cls-summary-item">
+              <div class="cls-summary-value">${nativeNames.length}</div>
+              <div class="cls-summary-label">聊天绑定</div>
+            </div>
+            <div class="cls-summary-item">
+              <div class="cls-summary-value">${sources.length}</div>
+              <div class="cls-summary-label">额外来源</div>
+            </div>
           </div>
         </div>
         ${missing.length ? `<div class="cls-warning">缺失来源：${escapeHtml(missing.join(', '))}</div>` : ''}
@@ -662,8 +662,7 @@ function createPanel() {
       <section class="cls-section">
         <div class="cls-section-head">
           <div>
-            <div class="cls-title">生成时会扫描</div>
-            <div class="cls-muted">这里是实际参与扫描的入口。来源书可移除，原生书由 ST 管理。</div>
+            <div class="cls-title">扫描列表</div>
           </div>
           ${sources.length ? '<button class="menu_button cls-danger-button" type="button" data-action="clear-sources">清空来源</button>' : ''}
         </div>
@@ -673,24 +672,22 @@ function createPanel() {
       <section class="cls-section">
         <div class="cls-section-head">
           <div>
-            <div class="cls-title">添加来源书</div>
-            <div class="cls-muted">默认只添加已存在的世界书；只有点击“新建空书”才会创建新书。</div>
+            <div class="cls-title">添加世界书</div>
           </div>
         </div>
 
         <div class="cls-add-card">
           <div class="cls-form-group">
-            <label class="cls-label" for="cls_source_search">搜索或输入世界书名称</label>
+            <label class="cls-label" for="cls_source_search">世界书名称</label>
             <div class="cls-field-row">
-              <input class="cls-input" id="cls_source_search" type="search" list="cls_worldbook_candidates" placeholder="输入世界书名称..." value="${escapeHtml(sourceQuery)}" autocomplete="off">
+              <input class="cls-input" id="cls_source_search" type="search" list="cls_worldbook_candidates" placeholder="选择或输入名称" value="${escapeHtml(sourceQuery)}" autocomplete="off">
               <datalist id="cls_worldbook_candidates">
                 ${candidates.map((name) => `<option value="${escapeHtml(name)}"></option>`).join('')}
               </datalist>
-              <button class="menu_button" type="button" data-action="add-source-query">添加已有</button>
+              <button class="menu_button cls-primary-button" type="button" data-action="add-source-query">添加</button>
               <button class="menu_button" type="button" data-action="create-source-query">新建空书</button>
             </div>
           </div>
-          <div class="cls-muted cls-help">搜索栏可直接输入。添加已有会拒绝不存在的名称；新建空书会创建一本空世界书并加入来源。</div>
         </div>
       </section>
     `);
